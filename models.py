@@ -12,6 +12,11 @@ class Station:
         self.date_start = date_start
         self.date_end = date_end
         self.sensors = []
+        self.polygon = []
+
+    @property
+    def latlon(self):
+        return (self.latitude, self.longitude)
 
     def to_dict(self):
         return {

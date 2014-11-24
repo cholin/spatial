@@ -3,6 +3,8 @@
 import zipfile
 import csv
 import ftplib
+import numpy as np
+from scipy.spatial import Voronoi
 from datetime import datetime
 from StringIO import StringIO
 from models import Station, SensorValue
@@ -16,11 +18,16 @@ class Importer:
         self.host = host
         self.path = path
         self.ftp = ftp_connect(self.host)
+        self.stations = []
 
 
-    def do_import(self):
+    def do_import(self, limit = None):
         data = self._get_stations_raw(self.path)
-        return self._parse_stations(data)
+        for station in self._parse_stations(data, limit):
+            self.stations.append(station)
+            yield station
+        self._generate_voronoi()
+
 
     def _get_stations_raw(self, path):
         # load stations file
@@ -28,15 +35,19 @@ class Importer:
         stations_file = [f.strip() for f in files if f.endswith('.txt')][0]
         return ftp_get_file(self.ftp, stations_file).getvalue()
 
-    def _parse_stations(self, data):
+    def _parse_stations(self, data, limit = None):
         # first two lines do not contain data
         lines = data.split('\r\n')[2:-1]
         reader = csv.reader(lines, delimiter=' ', skipinitialspace=True)
+        i = 0
         for row in reader:
             try:
                 station = self._parse_station(row)
                 if len(station.sensors) > 0:
                     yield self._parse_station(row)
+                    i += 1
+                if limit is not None and i >= limit:
+                    raise StopIteration
             except IndexError:
                 pass
 
@@ -66,4 +77,18 @@ class Importer:
         return [SensorValue(row[1], row[3], row[8]) for row in reader]
 
 
+    def _generate_voronoi(self):
+        # get all lat/long tuples for every station
+        points = np.zeros((len(self.stations), 2))
+        for i,s in enumerate(self.stations):
+             points[i,:] = s.latlon
 
+        # generate voronoi and get polygons for each region
+        vor = Voronoi(points)
+        polygons = []
+        for region in vor.regions:
+            polygons.append(vor.vertices[region] if -1 not in region else [])
+
+        # save each voronoi region polygon
+        for i, p in enumerate(vor.point_region):
+            self.stations[i].polygon = list(polygons[p])

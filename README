@@ -1,0 +1,16 @@
+Importer for DWD observations
+=============================
+
+The german weather service [1] provides a daily observation of weather in
+Germany. You can download this data from the following url:
+
+  ftp://ftp.dwd.de/pub/CDC/observations_germany/climate/daily/kl/
+
+To be able to import weather data by stations and sensors this import script can
+be useful. To import data just do the following:
+
+  $ git clone git@github.com:cholin/spatial.git
+  $ cd spatial
+  $ python2 .
+
+[1] http://www.dwd.de/

@@ -18,18 +18,18 @@ class Station:
     def lonlat(self):
         return (self.longitude, self.latitude)
 
-        def to_dict(self):
-            return {
-                'id' : self.identifier,
-                'name': self.name,
-                'altitude' : self.altitude,
-                'latitude' : self.latitude,
-                'longitude' : self.longitude,
-                'date_start' : self.date_start,
-            'date_end' : self.date_end,
-            'region' : self.region,
-            'measurements' : map(lambda x: x.to_dict(), self.measurements)
-        }
+    def to_dict(self):
+        return {
+            'id' : self.identifier,
+            'name': self.name,
+            'altitude' : self.altitude,
+            'latitude' : self.latitude,
+            'longitude' : self.longitude,
+            'date_start' : self.date_start,
+        'date_end' : self.date_end,
+        'region' : self.region,
+        'measurements' : map(lambda x: x.to_dict(), self.measurements)
+    }
 
     def __repr__(self):
         return "Station(name=%s)" % self.name

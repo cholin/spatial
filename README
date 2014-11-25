@@ -11,6 +11,6 @@ be useful. To import data just do the following:
 
   $ git clone git@github.com:cholin/spatial.git
   $ cd spatial
-  $ python2 .
+  $ python2 -m importer
 
 [1] http://www.dwd.de/

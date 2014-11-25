@@ -1,0 +1,4 @@
+GeoAlchemy2
+numpy
+scipy
+flask-script

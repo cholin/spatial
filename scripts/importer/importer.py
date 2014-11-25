@@ -7,7 +7,7 @@ import numpy as np
 from scipy.spatial import Voronoi
 from datetime import datetime
 from StringIO import StringIO
-from models import Station, SensorValue
+from models import Station, Measurement
 from ftp import ftp_connect, ftp_list, ftp_get_file
 from utils import date_as_datetime
 
@@ -22,11 +22,14 @@ class Importer:
 
 
     def do_import(self, limit = None):
-        data = self._get_stations_raw(self.path).decode("iso-8859-1").encode("utf-8") # station file is iso8859 encoded
+        print("Importing from %s (%s)\n" % (self.host, self.path))
+        # station file is iso8859 encoded
+        data = self._get_stations_raw(self.path).decode("iso-8859-1").encode("utf-8")
         for station in self._parse_stations(data, limit):
             self.stations.append(station)
             yield station
         self._generate_voronoi()
+        print("\n==> imported %d stations" % len(self.stations))
 
 
     def _get_stations_raw(self, path):
@@ -43,7 +46,7 @@ class Importer:
         for row in reader:
             try:
                 station = self._parse_station(row)
-                if len(station.sensors) > 0:
+                if len(station.measurements) > 0:
                     yield self._parse_station(row)
                     i += 1
                 if limit is not None and i >= limit:
@@ -53,11 +56,11 @@ class Importer:
 
     def _parse_station(self, raw):
         station = Station(raw[0], raw[6], raw[3], raw[4], raw[5], raw[1], raw[2])
-        station.sensors = self._parse_sensors(station)
+        station.measurements = self._parse_measurements(station)
         return station
 
 
-    def _parse_sensors(self, station):
+    def _parse_measurements(self, station):
         try:
             fp = ftp_get_file(self.ftp, station._get_file_name('recent'))
         except:
@@ -71,17 +74,16 @@ class Importer:
             data = archive.open(name)
 
 
-        # return all sensor values - for the moment only wind and temperature
-        sensor_values = []
+        # return all measurement values - for the moment only wind and temperature
         reader = list(csv.reader(data, delimiter=';', skipinitialspace=True))[1:-1]
-        return [SensorValue(row[1], row[3], row[8]) for row in reader]
+        return [Measurement(row[1], row[3], row[5], row[13], row[14], row[15]) for row in reader]
 
 
     def _generate_voronoi(self):
         # get all lat/long tuples for every station
         points = np.zeros((len(self.stations), 2))
         for i,s in enumerate(self.stations):
-             points[i,:] = s.latlon
+             points[i,:] = s.lonlat
 
         # generate voronoi and get polygons for each region
         vor = Voronoi(points)
@@ -91,4 +93,7 @@ class Importer:
 
         # save each voronoi region polygon
         for i, p in enumerate(vor.point_region):
-            self.stations[i].polygon = list(polygons[p])
+            polygon = list(map(list, polygons[p]))
+            if len(polygon) > 0:
+                # add first point as last point (needed for postgis)
+                self.stations[i].region = polygon + [polygon[0]]

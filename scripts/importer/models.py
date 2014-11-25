@@ -11,23 +11,24 @@ class Station:
         self.longitude = float(longitude)
         self.date_start = date_start
         self.date_end = date_end
-        self.sensors = []
-        self.polygon = []
+        self.measurements = []
+        self.region = []
 
     @property
-    def latlon(self):
-        return (self.latitude, self.longitude)
+    def lonlat(self):
+        return (self.longitude, self.latitude)
 
-    def to_dict(self):
-        return {
-            'id' : self.identifier,
-            'name': self.name,
-            'altitude' : self.altitude,
-            'latitude' : self.latitude,
-            'longitude' : self.longitude,
-            'date_start' : self.date_start,
+        def to_dict(self):
+            return {
+                'id' : self.identifier,
+                'name': self.name,
+                'altitude' : self.altitude,
+                'latitude' : self.latitude,
+                'longitude' : self.longitude,
+                'date_start' : self.date_start,
             'date_end' : self.date_end,
-            'sensors' : map(lambda x: x.to_dict(), self.sensors)
+            'region' : self.region,
+            'measurements' : map(lambda x: x.to_dict(), self.measurements)
         }
 
     def __repr__(self):
@@ -44,19 +45,25 @@ class Station:
         return '_'.join(values[version])
 
 
-class SensorValue:
-    def __init__(self, date_raw, temperature, wind):
+class Measurement:
+    def __init__(self, date_raw, temperature, cloudy, rainfall, sunshine_duration, snowfall_height):
         self.date = date_as_datetime(date_raw)
         self.temperature = temperature
-        self.wind = wind
+        self.cloudy = cloudy
+        self.rainfall = rainfall
+        self.sunshine_duration = sunshine_duration
+        self.snowfall_height = snowfall_height
 
     def to_dict(self):
         return {
             'date' : self.date.strftime('%Y-%m-%d'),
             'temperature' : self.temperature,
-            'wind' : self.wind
+            'cloudy': self.cloudy,
+            'rainfall': self.rainfall,
+            'sunshine_duration' : self.sunshine_duration,
+            'snowfall_height' : self.snowfall_height
         }
 
     def __repr__(self):
-        return "SensorValue(date=%s)" % self.date
+        return "Measurement(date=%s)" % self.date
 

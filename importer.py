@@ -22,7 +22,7 @@ class Importer:
 
 
     def do_import(self, limit = None):
-        data = self._get_stations_raw(self.path)
+        data = self._get_stations_raw(self.path).decode("iso-8859-1").encode("utf-8") # station file is iso8859 encoded
         for station in self._parse_stations(data, limit):
             self.stations.append(station)
             yield station

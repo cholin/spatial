@@ -13,10 +13,11 @@ parser.parse_args()
 parser.add_argument("host", help="ftp host url", nargs='?', default=DEFAULT_HOST)
 parser.add_argument("dir", help="directory", nargs='?', default=DEFAULT_DIR)
 parser.add_argument("file", help="file name", nargs='?', default=DEFAULT_FILE_NAME)
+parser.add_argument("limit", help="limit", nargs='?', default=None)
 args = parser.parse_args()
 
 importer = Importer(args.host, args.dir)
-for station in importer.do_import():
+for station in importer.do_import(args.limit):
      print("%s: %d" % (station.name, len(station.measurements)))
 
 with open(args.file, 'w') as f:

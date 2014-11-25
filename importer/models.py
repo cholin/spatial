@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from utils import date_as_datetime
+from .utils import date_as_datetime
 
 class Station:
     def __init__(self, identifier, name, altitude, latitude, longitude, date_start, date_end):

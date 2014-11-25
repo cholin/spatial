@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-from importer import Importer
+from .importer import Importer
 
 HOST = 'ftp.dwd.de'
 DIR_BASE = 'pub/CDC/observations_germany/climate/'

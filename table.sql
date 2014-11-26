@@ -12,7 +12,7 @@
   
   
   
-  CREATE TABLE sensors
+  CREATE TABLE Measurement
   (
   id int not null primary key,
   type varchar(255),

@@ -3,33 +3,27 @@
 from .utils import date_as_datetime
 
 class Station:
-    def __init__(self, identifier, name, altitude, latitude, longitude, date_start, date_end):
+    def __init__(self, identifier, name, coords, altitude, date_start, date_end):
         self.identifier = int(identifier)
         self.name = name
         self.altitude = int(altitude)
-        self.latitude = float(latitude)
-        self.longitude = float(longitude)
         self.date_start = date_start
         self.date_end = date_end
         self.measurements = []
-        self.region = []
-
-    @property
-    def lonlat(self):
-        return (self.longitude, self.latitude)
+        self.coords = coords
+        self.region = None
 
     def to_dict(self):
         return {
             'id' : self.identifier,
             'name': self.name,
             'altitude' : self.altitude,
-            'latitude' : self.latitude,
-            'longitude' : self.longitude,
+            'coords' : self.coords.wkt,
             'date_start' : self.date_start,
-        'date_end' : self.date_end,
-        'region' : self.region,
-        'measurements' : map(lambda x: x.to_dict(), self.measurements)
-    }
+            'date_end' : self.date_end,
+            'region' : self.region.wkt if self.region is not None else None,
+            'measurements' : map(lambda x: x.to_dict(), self.measurements)
+        }
 
     def __repr__(self):
         return "Station(name=%s)" % self.name

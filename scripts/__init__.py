@@ -27,20 +27,11 @@ def import_weather(host = DEFAULT_HOST, path = DEFAULT_PATH, limit = None):
     from app.models import Station
 
     importer = Importer(host, path)
-    data = []
     for station in importer.do_import(limit):
-        lonlat = 'POINT(%f %f)' % (station.longitude, station.latitude)
-        s = Station(name=station.name, geom=lonlat)
-        data.append((station,s))
+        geom = station.coords.wkt if station.coords is not None else None
+        region = station.region.wkt if station.region is not None else None
+        obj = Station(name=station.name, geom=geom, region=region)
+        db.session.add(obj)
+        db.session.commit()
 
         print("%s: %d" % (station.name, len(station.measurements)))
-
-    for raw,obj in data:
-        #for m in s0.measurements:
-        #    s1.append(Measurement())
-        if len(raw.region) > 0:
-            points = map(lambda x: ' '.join((str(i) for i in x)), raw.region)
-            obj.region = 'POLYGON((%s))' % ','.join(points)
-            db.session.add(obj)
-            db.session.commit()
-

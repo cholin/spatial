@@ -7,7 +7,7 @@ class Station(db.Model):
     name = db.Column(db.String)
     altitude = db.Column(db.Integer)
     geom = db.Column(Geometry('POINT'))
-    region = db.Column(Geometry('POLYGON'))
+    region = db.Column(Geometry())
     measurements = db.relationship("Measurement", backref="station")
 
     def __repr__(self):
@@ -23,10 +23,13 @@ class Station(db.Model):
 
     @property
     def region_as_geojson(self):
+      region = None
+      if self.region is not None:
+          region = json.loads(db.session.scalar(func.ST_AsGeoJSON(self.region)))
       return {
         "type": "Feature",
         "properties": {"name": self.name},
-        "geometry" : json.loads(db.session.scalar(func.ST_AsGeoJSON(self.region)))
+        "geometry" : region
       }
 
 class Measurement(db.Model):

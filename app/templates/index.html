@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>title</title>
+    <title>Spatial</title>
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
 
@@ -24,13 +24,21 @@
   </body>
 
   <script>
-    var map = L.map('map').setView([52, 13], 3);
+    var map = L.map('map').setView([51.8, 10], 6);
     L.tileLayer('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
             maxZoom: 18,
             id: 'examples.map-20v6611k'
     }).addTo(map);
 
-    var geojson = L.geoJson().addTo(map);
+    function onEachFeature(feature, layer) {
+        if (feature.properties && feature.properties.name) {
+            layer.bindPopup(feature.properties.name);
+        }
+    }
+
+    var geojson = L.geoJson([],{
+          onEachFeature: onEachFeature
+        }).addTo(map);
     geojson.addData({{geojson|safe}});
   </script>
 </html>

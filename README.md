@@ -39,7 +39,7 @@ $ cat config.cfg.dist config.cfg
 $ vim config.cfg                   # set credentials for SQLALCHEMY
 ```
 
-Create database and import data from DWD (see https://github.com/cholin/spatial/blob/master/scripts/importer/README)
+Create database and import data from DWD (see [README](https://github.com/cholin/spatial/blob/master/scripts/importer/README.md))
 
 ```
 $ python2 manage.py resetdb

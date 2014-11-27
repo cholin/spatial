@@ -15,7 +15,8 @@ def index():
 @main.route('/api/<date>')
 def api(date):
     date_cmp = datetime.strptime(date, "%Y-%m-%d")
-    qry = db.session.query(Measurement).filter(Measurement.date == date_cmp)
+    qry = db.session.query(Measurement).filter(Measurement.date == date_cmp) \
+                                       .filter(Measurement.value != -999)
     measurements = [m.to_geojson() for m in qry.all()]
     return jsonify(measurements=measurements)
 

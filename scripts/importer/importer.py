@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import zipfile
 import csv
 import ftplib
@@ -33,10 +34,12 @@ class Importer:
         for i, station in enumerate(self._parse_stations(data, limit)):
             print("\t%d. %s " % (i+1, station.name))
             self.stations.append(station)
-        print("Parsing done.")
+        print("Parsing done.\n")
 
         # generate voronoi diagram to generate region polygon for each station
         self._generate_voronoi()
+        regions = len([x.region for x in self.stations if x.region is not None])
+        print("Generated voronoi diagram (%d regions).\n" % regions)
 
         # yield parsed stations
         for station in self.stations:
@@ -106,7 +109,9 @@ class Importer:
             polygons.append(vor.vertices[region] if -1 not in region else [])
 
         # load germany border polygon (for intersection test)
-        with open("scripts/importer/germany_border.geojson", "r") as f:
+        script_path = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(script_path, 'germany_border.geojson')
+        with open(path, "r") as f:
             raw = json.load(f)
             coordinates_ger = raw['features'][0]['geometry']['coordinates']
             polygons_ger = [[p[0], []] for p in coordinates_ger]

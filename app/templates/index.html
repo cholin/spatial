@@ -32,12 +32,22 @@
 
     function onEachFeature(feature, layer) {
         if (feature.properties && feature.properties.name) {
-            layer.bindPopup(feature.properties.name);
+            layer.bindPopup(feature.properties.name + " "+feature.properties.value);
         }
     }
 
+    function setStyle(feature) {
+      var hue = 30 + 240 * (50 - 2*feature.properties.value) / 60;
+      return {
+        "color": "hsl(" + [hue, '100%', '50%'] + ")",
+        "weight": 0,
+        "opacity": 0.65
+      };
+    }
+
     var geojson = L.geoJson([],{
-          onEachFeature: onEachFeature
+          onEachFeature: onEachFeature,
+          style: setStyle
         }).addTo(map);
     geojson.addData({{geojson|safe}});
   </script>

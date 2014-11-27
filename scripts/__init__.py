@@ -24,13 +24,16 @@ DEFAULT_PATH= 'pub/CDC/observations_germany/climate/daily/kl/recent/'
 def import_weather(host = DEFAULT_HOST, path = DEFAULT_PATH, limit = None):
     import json
     from scripts.importer.importer import Importer
-    from app.models import Station
+    from app.models import Station, Measurement
 
     importer = Importer(host, path)
     for station in importer.do_import(limit):
         geom = station.coords.wkt if station.coords is not None else None
         region = station.region.wkt if station.region is not None else None
         obj = Station(name=station.name, geom=geom, region=region)
+        for m in station.measurements:
+            o = Measurement(type='temperature',value=m.temperature,date=m.date)
+            obj.measurements.append(o)
         db.session.add(obj)
         db.session.commit()
 

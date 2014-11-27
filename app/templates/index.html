@@ -5,6 +5,7 @@
     <title>Spatial</title>
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
     <style>
       body {
@@ -49,7 +50,14 @@
           onEachFeature: onEachFeature,
           style: setStyle
         }).addTo(map);
-    geojson.addData({{geojson|safe}});
+
+    $.ajax({
+      dataType: "json",
+      url: "api/2014-07-01",
+      success: function(data) {
+        geojson.addData(data.measurements);
+      }
+    }).error(function() {});
   </script>
 </html>
 

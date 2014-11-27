@@ -11,7 +11,6 @@ def create_app(config=None):
 
     configure_app(app)
     configure_extensions(app)
-    configure_error_handlers(app)
 
     for blueprint in [main]:
         app.register_blueprint(blueprint)
@@ -28,12 +27,3 @@ def configure_app(app):
 def configure_extensions(app):
     # flask-sqlalchemy
     db.init_app(app)
-
-
-def configure_error_handlers(app):
-    @app.errorhandler(400)
-    @app.errorhandler(403)
-    @app.errorhandler(404)
-    def errorhandler(e):
-        return render_template('error.html', error=e), e.code
-

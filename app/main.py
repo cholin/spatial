@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import json
-from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify
 from .models import Station, Measurement
-from .exts import db
 
 main = Blueprint('main', __name__)
 
@@ -12,11 +10,10 @@ main = Blueprint('main', __name__)
 def index():
     return render_template('index.html')
 
-@main.route('/api/<date>')
-def api(date):
-    date_cmp = datetime.strptime(date, "%Y-%m-%d")
-    qry = db.session.query(Measurement).filter(Measurement.date == date_cmp) \
-                                       .filter(Measurement.value != -999)
-    measurements = [m.to_geojson() for m in qry.all()]
-    return jsonify(measurements=measurements)
+@main.route('/api/<mtype>')
+@main.route('/api/<mtype>/<date>')
+def api(mtype, date = None):
+    date, data = Measurement.all(mtype, date)
+    measurements = [m.to_geojson() for m in data]
+    return jsonify(date = date,  measurements=measurements)
 

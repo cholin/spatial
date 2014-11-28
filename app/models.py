@@ -1,4 +1,6 @@
 import json
+from datetime import datetime
+from sqlalchemy import desc
 from geoalchemy2 import Geometry, functions as func
 from .exts import db
 
@@ -26,11 +28,25 @@ class Measurement(db.Model):
     date = db.Column(db.DateTime)
     station_id = db.Column(db.Integer, db.ForeignKey('station.id'))
 
+    @classmethod
+    def all(cls, mtype, date = None):
+        qry = db.session.query(cls).filter(cls.type == mtype) \
+                    .filter(cls.value != -999) \
+                    .order_by(desc(cls.date))
+
+        if date is None:
+            date_cmp = qry.first().date
+        else:
+            date_cmp = datetime.strptime(date, "%Y-%m-%d")
+
+        return date_cmp, qry.filter(Measurement.date == date_cmp).all()
+
     def to_geojson(self):
         return {
             "type": "Feature",
             "properties": {
                 "name": self.station.name,
+                "altitude": self.station.altitude,
                 "type": self.type,
                 "value": self.value
             },

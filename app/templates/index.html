@@ -16,6 +16,18 @@
           height: 100%;
           width: 100%;
       }
+      dt  {
+          display: inline-block;
+          text-transform: capitalize;
+          font-weight: bold;
+          width: 40%;
+      }
+      dd {
+          display: inline-block;
+          margin: 5px;
+          width: 50%;
+          text-align: right;
+      }
     </style>
     <!--<link rel="stylesheet" href="style.css">-->
     <!--<script src="script.js"></script>-->
@@ -33,7 +45,15 @@
 
     function onEachFeature(feature, layer) {
         if (feature.properties && feature.properties.name) {
-            layer.bindPopup(feature.properties.name + " "+feature.properties.value);
+          layer.bindPopup(
+                "<h3>" + feature.properties.name + "</h3>"
+              + "<dl>"
+              + "  <dt>"+feature.properties.type+"</dt>"
+              + "  <dd>"+feature.properties.value+"</dd>"
+              + "  <dt>Altitude</dt>"
+              + "  <dd>"+feature.properties.altitude+"</dd>"
+              + "</dl>"
+          );
         }
     }
 
@@ -56,7 +76,7 @@
       // Load geojson data
       $.ajax({
         dataType: "json",
-        url: "api/" + date,
+        url: "api/temperature/" + date,
         success: function(data) {
           geojson.addData(data.measurements);
         }

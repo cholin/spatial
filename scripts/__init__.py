@@ -30,7 +30,7 @@ def import_weather(host = DEFAULT_HOST, path = DEFAULT_PATH, limit = None):
     for station in importer.do_import(limit):
         geom = station.coords.wkt if station.coords is not None else None
         region = station.region.wkt if station.region is not None else None
-        obj = Station(name=station.name, geom=geom, region=region)
+        obj = Station(name=station.name, altitude=station.altitude, geom=geom, region=region)
         for m in station.measurements:
             o = Measurement(type='temperature',value=m.temperature,date=m.date)
             obj.measurements.append(o)

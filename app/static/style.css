@@ -1,0 +1,30 @@
+body {
+    padding: 0;
+    margin: 0;
+}
+html, body, #map {
+    height: 100%;
+    width: 100%;
+}
+dt  {
+    display: inline-block;
+    text-transform: capitalize;
+    font-weight: bold;
+    width: 40%;
+}
+dd {
+    display: inline-block;
+    margin: 5px;
+    width: 50%;
+    text-align: right;
+}
+
+.slider {
+  text-align: center;
+  width: 100%;
+  background-color: #fff;
+}
+
+.slider p {
+  margin: 0px;
+}

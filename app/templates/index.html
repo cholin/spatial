@@ -2,154 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Spatial</title>
+    <title>Weather data visualizer</title>
+
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     <script src="{{url_for('static', filename='leaflet.ajax.min.js')}}"></script>
     <script src="{{url_for('static', filename='spin.js')}}"></script>
     <script src="{{url_for('static', filename='leaflet.spin.js')}}"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-
-    <style>
-      body {
-          padding: 0;
-          margin: 0;
-      }
-      html, body, #map {
-          height: 100%;
-          width: 100%;
-      }
-      dt  {
-          display: inline-block;
-          text-transform: capitalize;
-          font-weight: bold;
-          width: 40%;
-      }
-      dd {
-          display: inline-block;
-          margin: 5px;
-          width: 50%;
-          text-align: right;
-      }
-
-      .slider {
-        text-align: center;
-        width: 100%;
-        background-color: #fff;
-      }
-
-      .slider p {
-        margin: 0px;
-      }
-    </style>
-    <!--<link rel="stylesheet" href="style.css">-->
-    <!--<script src="script.js"></script>-->
+    <script src="{{url_for('static', filename='script.js')}}"></script>
   </head>
   <body>
     <div id="map"></div>
   </body>
-
-  <script>
-    $(function() {
-      var map = L.map('map').setView([51.8, 10], 6);
-      L.tileLayer('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
-              maxZoom: 18,
-              id: 'examples.map-20v6611k'
-      }).addTo(map);
-
-      function onEachFeature(feature, layer) {
-          if (feature.properties && feature.properties.name) {
-            layer.bindPopup(
-                  "<h3>" + feature.properties.name + "</h3>"
-                + "<dl>"
-                + "  <dt>"+feature.properties.type+"</dt>"
-                + "  <dd>"+feature.properties.value+"</dd>"
-                + "  <dt>Altitude</dt>"
-                + "  <dd>"+feature.properties.altitude+"</dd>"
-                + "</dl>"
-            );
-          }
-      }
-
-      function setStyle(feature) {
-        var hue = 30 + 240 * (50 - 2*feature.properties.value) / 60;
-        return {
-          "color": "hsl(" + [hue, '100%', '50%'] + ")",
-          "weight": 0,
-          "opacity": 0.65
-        };
-      }
-
-      var geojsonLayer = new L.GeoJSON.AJAX("api/temperature",{
-        onEachFeature: onEachFeature,
-        style: setStyle,
-        middleware: function(data) {
-          // Update label
-          var elem = $('.slider p');
-          if (elem.length != 0) {
-            elem.html(data.date);
-          } else {
-            $('.slider').append("<p>"+data.date+"</p>");
-          }
-
-          if (data.measurements.length == 0) {
-            var span = "<span style=\"display:block;color:red\"> no data</span>";
-            $('.slider p').append(span);
-          }
-
-          return data.measurements;
-        }
-      }).addTo(map);
-
-      function getDate() {
-        var max = parseInt($('.slider input').attr('max'));
-        var val = parseInt($('.slider input').val());
-        var offset = (max-val)*1000*60*60*24;
-        var date = new Date(new Date().getTime() - offset);
-
-        return date.getFullYear() + '-' +
-               (parseInt(date.getMonth())+1) + '-' +
-               date.getDate();
-      }
-
-      L.Control.Slider = L.Control.extend(
-      {
-        options: { position: 'bottomleft' },
-        onAdd: function (map) {
-          var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar slider');
-          L.DomEvent
-            // add functionality to reload data
-            .addListener(controlDiv, 'change', function() {
-              geojsonLayer.refresh("api/temperature/"+getDate());
-            })
-
-            .addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
-            .addListener(controlDiv, 'click', L.DomEvent.preventDefault)
-
-            // disable dragging for map otherwise slider is not useable
-            .addListener(controlDiv, 'mouseover', function() {
-                map.dragging.disable()
-              })
-
-            // enable dragging for map again
-            .addListener(controlDiv, 'mouseout', function() {
-              map.dragging.enable();
-              })
-
-          var controlUI = L.DomUtil.create('input', 'leaflet-draw-edit-remove full-width', controlDiv);
-          controlUI.type = 'range';
-          controlUI.min = '0';
-          controlUI.max = '100';
-          controlUI.value = '100';
-          controlUI.step = '1';
-
-          return controlDiv;
-        }
-      });
-
-      var sliderControl = new L.Control.Slider();
-      map.addControl(sliderControl);
-    });
-  </script>
 </html>
 

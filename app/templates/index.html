@@ -5,6 +5,9 @@
     <title>Spatial</title>
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="{{url_for('static', filename='leaflet.ajax.min.js')}}"></script>
+    <script src="{{url_for('static', filename='spin.js')}}"></script>
+    <script src="{{url_for('static', filename='leaflet.spin.js')}}"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
     <style>
@@ -77,36 +80,33 @@
         };
       }
 
-      function createGeoJSONLayer(date) {
-        // Update label
-        var elem = $('.slider p');
-        if (elem.length != 0)
-          elem.html(date);
-        else
-          $('.slider').append("<p>"+date+"</p>");
-
-        // create geojson layer
-        var geojson = L.geoJson([],{
-              onEachFeature: onEachFeature,
-              style: setStyle
-            }).addTo(map);
-
-        // Load geojson data
-        $.ajax({
-          dataType: "json",
-          url: "api/temperature/" + date,
-          success: function(data) {
-            if (data.measurements.length == 0) {
-              var span = "<span style=\"display:block;color:red\"> no data</span>";
-              $('.slider p').append(span);
-            }
-            geojson.addData(data.measurements);
+      var geojsonLayer = new L.GeoJSON.AJAX("api/temperature",{
+        onEachFeature: onEachFeature,
+        style: setStyle,
+        middleware: function(data) {
+          // Update label
+          var elem = $('.slider p');
+          if (elem.length != 0) {
+            elem.html(data.date);
+          } else {
+            $('.slider').append("<p>"+data.date+"</p>");
           }
-        }).error(function() {});
-        return geojson;
-      }
 
-      function formatDate(date) {
+          if (data.measurements.length == 0) {
+            var span = "<span style=\"display:block;color:red\"> no data</span>";
+            $('.slider p').append(span);
+          }
+
+          return data.measurements;
+        }
+      }).addTo(map);
+
+      function getDate() {
+        var max = parseInt($('.slider input').attr('max'));
+        var val = parseInt($('.slider input').val());
+        var offset = (max-val)*1000*60*60*24;
+        var date = new Date(new Date().getTime() - offset);
+
         return date.getFullYear() + '-' +
                (parseInt(date.getMonth())+1) + '-' +
                date.getDate();
@@ -114,49 +114,41 @@
 
       L.Control.Slider = L.Control.extend(
       {
-          options: { position: 'bottomleft' },
-          geoJSONLayer: undefined,
-          loadGeoJSON: function() {
-            // remove current data
-            if (this.geoJSONLayer)
-              map.removeLayer(this.geoJSONLayer);
+        options: { position: 'bottomleft' },
+        onAdd: function (map) {
+          var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar slider');
+          L.DomEvent
+            // add functionality to reload data
+            .addListener(controlDiv, 'change', function() {
+              geojsonLayer.refresh("api/temperature/"+getDate());
+            })
 
-            // load data
-            var max = parseInt($('.slider input').attr('max'));
-            var val = parseInt($('.slider input').val());
-            var offset = (max-val)*1000*60*60*24;
-            var date = new Date(new Date().getTime() - offset);
-            this.geoJSONLayer = createGeoJSONLayer(formatDate(date));
-          },
-          onAdd: function (map) {
-              var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar slider');
-              L.DomEvent
-                  .addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
-                  .addListener(controlDiv, 'click', L.DomEvent.preventDefault)
-                  .addListener(controlDiv, 'mouseover', function() {
-                      // disable dragging for map otherwise slider is not useable
-                      map.dragging.disable()
-                    })
-                  .addListener(controlDiv, 'mouseout', function() {
-                    // enable dragging for map again
-                    map.dragging.enable();
-                    })
-                  .addListener(controlDiv, 'change', this.loadGeoJSON);
+            .addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
+            .addListener(controlDiv, 'click', L.DomEvent.preventDefault)
 
-              var controlUI = L.DomUtil.create('input',
-                                'leaflet-draw-edit-remove full-width', controlDiv);
-              controlUI.type = 'range';
-              controlUI.min = '0';
-              controlUI.max = '100';
-              controlUI.value = '100';
-              controlUI.step = '1';
+            // disable dragging for map otherwise slider is not useable
+            .addListener(controlDiv, 'mouseover', function() {
+                map.dragging.disable()
+              })
 
-              return controlDiv;
-          }
+            // enable dragging for map again
+            .addListener(controlDiv, 'mouseout', function() {
+              map.dragging.enable();
+              })
+
+          var controlUI = L.DomUtil.create('input', 'leaflet-draw-edit-remove full-width', controlDiv);
+          controlUI.type = 'range';
+          controlUI.min = '0';
+          controlUI.max = '100';
+          controlUI.value = '100';
+          controlUI.step = '1';
+
+          return controlDiv;
+        }
       });
+
       var sliderControl = new L.Control.Slider();
       map.addControl(sliderControl);
-      sliderControl.loadGeoJSON();
     });
   </script>
 </html>

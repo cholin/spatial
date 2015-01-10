@@ -1,4 +1,5 @@
 *.pyc
+*.py~
 *.json
 *.swp
 config.cfg

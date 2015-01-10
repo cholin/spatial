@@ -3,3 +3,5 @@ numpy
 scipy
 flask-script
 shapely
+flask-sqlalchemy
+psycopg2

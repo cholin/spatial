@@ -29,13 +29,13 @@ $ git clone git@github.com:cholin/spatial.git
 $ cd spatial
 $ virtualenv2 env
 $ . env/bin/activate               # activate virtual environment
-$ pip -r requirements.txt
+$ pip install -r requirements.txt
 ```
 
 Configure database credentials
 
 ```
-$ cat config.cfg.dist config.cfg
+$ cat config.cfg.dist > config.cfg
 $ vim config.cfg                   # set credentials for SQLALCHEMY
 ```
 

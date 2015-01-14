@@ -8,8 +8,8 @@ class Station(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     altitude = db.Column(db.Integer)
-    geom = db.Column(Geometry('POINT'))
-    region = db.Column(Geometry())
+    geom = db.Column(Geometry('POINT', srid=4326))
+    region = db.Column(Geometry(srid=4326))
     measurements = db.relationship("Measurement", backref="station")
 
     def __repr__(self):

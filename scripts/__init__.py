@@ -1,5 +1,6 @@
 from manage import manager
 from app.exts import db
+from geoalchemy2.elements import WKTElement
 
 @manager.command
 def resetdb():
@@ -28,8 +29,13 @@ def import_weather(host = DEFAULT_HOST, path = DEFAULT_PATH, limit = None):
 
     importer = Importer(host, path)
     for station in importer.do_import(limit):
-        geom = station.coords.wkt if station.coords is not None else None
-        region = station.region.wkt if station.region is not None else None
+        geom = None
+        if station.coords is not None:
+            geom = WKTElement(station.coords.wkt, srid=4326)
+
+        region = None
+        if station.region is not None:
+            region = WKTElement(station.region.wkt, srid=4326)
         obj = Station(name=station.name, altitude=station.altitude, geom=geom, region=region)
         for m in station.measurements:
             o = Measurement(type='temperature',value=m.temperature,date=m.date)

@@ -1,3 +1,10 @@
+# database configuration
 SQLALCHEMY_DATABASE_URI = 'postgresql://USER:PASS@localhost/DATABASE'
-#SQLALCHEMY_ECHO = True
-DEBUG = True
+
+# do not sort or pretty print jsonify() responses for speed reasons
+JSON_SORT_KEYS = False
+JSONIFY_PRETTYPRINT_REGULAR = False
+
+# debug settings
+SQLALCHEMY_ECHO = False
+DEBUG = False

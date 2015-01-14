@@ -103,6 +103,8 @@ class Importer:
             points[i,:] = list(s.coords.coords)[0]
 
         # generate voronoi and get polygons for each region
+        # TODO: calculate as well infinite regions, see
+        # https://stackoverflow.com/questions/20515554/colorize-voronoi-diagram
         vor = Voronoi(points)
         polygons = []
         for region in vor.regions:

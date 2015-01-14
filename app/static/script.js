@@ -44,7 +44,7 @@ $(function() {
   }).addTo(map);
 
   // geojson layer (leaflet-ajax plugin)
-  var geojsonLayer = new L.GeoJSON.AJAX("api/temperature",{
+  var geojsonLayer = new L.GeoJSON.AJAX("api/measurements/temperature",{
     onEachFeature: onEachFeature,
     style: setStyle,
     middleware: function(data) {
@@ -77,7 +77,7 @@ $(function() {
       L.DomEvent
         // add functionality to reload data
         .addListener(controlDiv, 'change', function() {
-          geojsonLayer.refresh("api/temperature/"+getDate());
+          geojsonLayer.refresh("api/measurements/temperature/"+getDate());
         })
 
         .addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
@@ -106,4 +106,23 @@ $(function() {
 
   var sliderControl = new L.Control.Slider();
   map.addControl(sliderControl);
+
+  //  Downloaded subregion 5 (west), 15 (east), 
+  //  56 (north), 47 (south) corresponds to
+  //imageBounds = [[47.,5.], [56., 15.]];
+  var imageUrl = 'http://localhost:5000/api/forecasts/temperature'
+  imageBounds = [[47.3895116180001,5.85248986800011], [54.90590037, 14.9501904839839]];
+
+  var forecastLayer = L.imageOverlay(imageUrl, imageBounds, {
+      'opacity' : 0.5
+  });
+
+  var baseLayers = {
+    "Messung": geojsonLayer,
+    "Vorhersage": forecastLayer
+  };
+
+  var options = {'collapsed' : false};
+  var layerControl = L.control.groupedLayers(baseLayers, {}, options);
+  map.addControl(layerControl);
 });

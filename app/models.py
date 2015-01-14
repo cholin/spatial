@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from sqlalchemy import desc
-from geoalchemy2 import Geometry, functions as func
+from geoalchemy2 import Geometry, Raster, functions as func
 from .exts import db
 
 class Station(db.Model):
@@ -52,3 +52,45 @@ class Measurement(db.Model):
             },
             "geometry" : self.station.region_as_geojson()
         }
+
+
+class Forecast(db.Model):
+    rid = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String, index=True)
+    subtype = db.Column(db.String)
+    date = db.Column(db.DateTime)
+    interval = db.Column(db.Interval)
+    rast = db.Column(Raster())
+
+    @classmethod
+    def get_raster_img(cls, ftype, date):
+        result = db.engine.execute("""
+            SELECT
+                ST_AsPNG(
+                    ST_Transform(
+                        ST_CLIP(
+                            ST_ColorMap(
+                                ST_Resample(
+                                    rast,
+                                    800,
+                                    800,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    0,
+                                    'Cubic'
+                                ),
+                                1,
+                                'pseudocolor'
+                            ),
+                            (SELECT ST_UNION(region) FROM station),
+                            True
+                        ),
+                        3857
+                    )
+                ) as img
+            FROM
+                forecasts
+            LIMIT 1
+        """);
+        return result.first()['img']

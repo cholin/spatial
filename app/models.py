@@ -60,8 +60,15 @@ class Forecast(db.Model):
     interval = db.Column(db.Interval)
     rast = db.Column(Raster())
 
+    # which bands corresponds to which data?
+    ftypes = {
+        'temperature' : 0,
+        'rainfall' : 1
+    }
+
     @classmethod
     def get_raster_img(cls, ftype, date):
+        # TODO: sanitize user input!!
         result = db.engine.execute("""
             SELECT
                 ST_AsPNG(
@@ -88,7 +95,10 @@ class Forecast(db.Model):
                     )
                 ) as img
             FROM
-                forecasts
+                forecast
+            WHERE
+                date + interval = '%s'
             LIMIT 1
-        """);
+        """ % date);
+
         return result.first()['img']

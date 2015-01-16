@@ -100,3 +100,33 @@ def import_forecast(date_from, date_to = None):
     print("\nErrors:")
     for d,i in errors:
         print("\t* %s %d - file not found" % (d.strftime("%Y-%m-%d %H:%M"), i))
+
+
+@manager.command
+@manager.option('-p', '--driver_path', help='path to your jdbc3 postresql jar')
+def schema_spy(schema_spy_path, driver_path = None):
+    import shutil
+    from flask import current_app
+    from subprocess import call
+
+    _, _, uri, db = current_app.config['SQLALCHEMY_DATABASE_URI'].split('/')
+    cred, host = uri.split('@')
+    user, pw = cred.split(':')
+    dest = 'doc/tables'
+
+    cmd = ['java', '-jar',
+           schema_spy_path,
+           '-t', 'pgsql',
+           '-db', db,
+           '-host', host,
+           '-s', 'public',
+           '-u', user,
+           '-p', pw,
+           '-o', dest
+    ]
+
+    if driver_path is not None:
+        cmd.extend(['-dp', driver_path])
+
+    shutil.rmtree(dest)
+    call(cmd)

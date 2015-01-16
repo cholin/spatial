@@ -56,8 +56,6 @@ class Measurement(db.Model):
 
 class Forecast(db.Model):
     rid = db.Column(db.Integer, primary_key=True)
-    type = db.Column(db.String, index=True)
-    subtype = db.Column(db.String)
     date = db.Column(db.DateTime)
     interval = db.Column(db.Interval)
     rast = db.Column(Raster())

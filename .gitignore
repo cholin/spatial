@@ -3,4 +3,5 @@ env
 *.py~
 *.json
 *.swp
+doc/tables
 config.cfg

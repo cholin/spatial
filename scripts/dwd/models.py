@@ -9,7 +9,6 @@ class Station:
         self.altitude = int(altitude)
         self.date_start = date_start
         self.date_end = date_end
-        self.measurements = []
         self.coords = coords
         self.region = None
 
@@ -22,7 +21,6 @@ class Station:
             'date_start' : self.date_start,
             'date_end' : self.date_end,
             'region' : self.region.wkt if self.region is not None else None,
-            'measurements' : map(lambda x: x.to_dict(), self.measurements)
         }
 
     def __repr__(self):
@@ -35,6 +33,7 @@ class Station:
         values = {
             'recent' : ('tageswerte', 'KL', self._get_id_as_str(), 'akt.zip'),
             'historical' : ('tageswerte', self._get_id_as_str(), self.date_start, self.date_end, 'hist.zip'),
+            'hourly' : ('stundenwerte','TU', self._get_id_as_str(), 'akt.zip'),
         }
         return '_'.join(values[version])
 

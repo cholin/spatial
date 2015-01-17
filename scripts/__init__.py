@@ -20,7 +20,7 @@ def resetdb():
 
 
 DEFAULT_HOST = 'ftp.dwd.de'
-DEFAULT_PATH= 'pub/CDC/observations_germany/climate/daily/kl/recent/'
+DEFAULT_PATH= 'pub/CDC/observations_germany/climate//hourly/air_temperature/recent/'
 @manager.command
 @manager.option('-h', '--host', help='host')
 @manager.option('-p', '--path', help='path')
@@ -34,26 +34,38 @@ def import_weather(host = DEFAULT_HOST, path = DEFAULT_PATH, limit = None):
     from scripts.dwd.importer import Importer
     from app.models import Station, Measurement
     from geoalchemy2.elements import WKTElement
+    from geoalchemy2.shape import to_shape, from_shape
 
     importer = Importer(host, path)
-    for i,station in enumerate(importer.do_import(limit)):
-        geom = None
-        if station.coords is not None:
-            geom = WKTElement(station.coords.wkt, srid=4326)
+    print("Importing from %s (%s)\n" % (host, path))
 
-        region = None
-        if station.region is not None:
-            region = WKTElement(station.region.wkt, srid=4326)
+    # import stations and measurements
+    for i,(station,measurements) in enumerate(importer.do_import()):
+        if limit is not None and i+1 > int(limit):
+            break
 
-        obj = Station(name=station.name, altitude=station.altitude, geom=geom, region=region)
-        for m in station.measurements:
-            o = Measurement(type='temperature',value=m.temperature,date=m.date)
-            obj.measurements.append(o)
+        if len(measurements) > 0:
+            geom = from_shape(station.coords, srid=4326)
+            obj = Station(name=station.name, altitude=station.altitude, geom=geom)
+            for m in measurements:
+                # only add measurements for 00:00, 06:00, 12:00, 18:00, 24:00
+                if m.date.hour % 6 == 0:
+                    o = Measurement(type='temperature',value=m.temperature,date=m.date)
+                    obj.measurements.append(o)
 
-        db.session.add(obj)
-        db.session.commit()
+            db.session.add(obj)
+            db.session.commit()
 
-        print("\t%d %s: %d" % (i, station.name, len(station.measurements)))
+            print("\t%d. %s: %d" % (i+1, obj.name, len(obj.measurements)))
+
+    # Calculate regions for stations (voronoi)
+    stations = Station.query.all()
+    points = [to_shape(s.geom) for s in stations]
+    for i,region in enumerate(Importer.generate_regions(points)):
+        stations[i].region = from_shape(region, srid=4326)
+        db.session.add(stations[i])
+
+    db.session.commit()
 
 
 @manager.command
@@ -74,7 +86,7 @@ def import_forecast(date_from, date_to = None):
     errors = []
     table = Forecast.__table__.name
     intervals = [24]
-    generator = forecast_noaa_import(date_from, date_to, table, interals)
+    generator = forecast_noaa_import(date_from, date_to, table, intervals)
     for date, interval, sql in generator:
         if sql is not None:
             # create new record with output of raster2sql

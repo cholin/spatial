@@ -12,7 +12,6 @@ from datetime import datetime
 from StringIO import StringIO
 from models import Station, Measurement
 from ftp import ftp_connect, ftp_list, ftp_get_file
-from utils import date_as_datetime
 
 
 class Importer:
@@ -21,31 +20,22 @@ class Importer:
         self.host = host
         self.path = path
         self.ftp = ftp_connect(self.host)
-        self.stations = []
 
 
-    def do_import(self, limit = None):
-        print("Importing from %s (%s)\n" % (self.host, self.path))
+    def do_import(self):
+        """
+            Imports data from the ftp server of DWD (german weather service).
+            It returns a generator with (station, measurements)
+        """
         # station file is iso8859 encoded
         data = self._get_stations_raw(self.path).decode("iso-8859-1").encode("utf-8")
 
-        # parse stations, download each zip, unpack it and parse data
-        print("Parsing data...")
-        for i, station in enumerate(self._parse_stations(data, limit)):
-            print("\t%d. %s " % (i+1, station.name))
-            self.stations.append(station)
-        print("Parsing done.\n")
-
-        # generate voronoi diagram to generate region polygon for each station
-        self._generate_voronoi()
-        regions = len([x.region for x in self.stations if x.region is not None])
-        print("Generated voronoi diagram (%d regions).\n" % regions)
-
-        # yield parsed stations
-        for station in self.stations:
-            yield station
-
-        print("\n==> imported %d stations" % len(self.stations))
+        # parse stations, download each zip, unpack it and parse data and yield
+        # it
+        for station in self._parse_stations(data):
+            measurements = self._parse_measurements(station)
+            if len(measurements) > 0:
+                yield station, measurements
 
 
     def _get_stations_raw(self, path):
@@ -54,63 +44,70 @@ class Importer:
         stations_file = [f.strip() for f in files if f.endswith('.txt')][0]
         return ftp_get_file(self.ftp, stations_file).getvalue()
 
-    def _parse_stations(self, data, limit = None):
+
+    def _parse_stations(self, data):
+        """ parses raw csv stations file """
         # first two lines do not contain data
         lines = data.split('\r\n')[2:-1]
         reader = csv.reader(lines, delimiter=' ', skipinitialspace=True)
-        i = 0
         for row in reader:
             try:
                 station = self._parse_station(row)
-                if len(station.measurements) > 0:
-                    yield self._parse_station(row)
-                    i += 1
-                if limit is not None and i >= int(limit):
-                    raise StopIteration
+                yield self._parse_station(row)
             except IndexError:
                 pass
 
     def _parse_station(self, raw):
+        """ parses a line of raw csv station file """
         coords = Point(float(raw[5]), float(raw[4]))
-        station = Station(raw[0], raw[6], coords, raw[3], raw[1], raw[2])
-        station.measurements = self._parse_measurements(station)
-        return station
+        return Station(raw[0], raw[6], coords, raw[3], raw[1], raw[2])
 
 
     def _parse_measurements(self, station):
+        """ 
+            downloads corresponding zip for a station to extract measurements
+            and returns them.
+        """
         try:
-            fp = ftp_get_file(self.ftp, station._get_file_name('recent'))
+            fp = ftp_get_file(self.ftp, station._get_file_name('hourly'))
         except:
             return []
 
         data = StringIO()
         with zipfile.ZipFile(fp) as archive:
             # get file name for data
-            name = ([x for x in archive.namelist() if x.startswith('produkt_klima_Tageswerte')])[0]
+            name = ([x for x in archive.namelist() if x.startswith('produkt')])[0]
             # extract file into data
             data = archive.open(name)
 
-
         # return all measurement values
         reader = list(csv.reader(data, delimiter=';', skipinitialspace=True))[1:-1]
-        return [Measurement(row[1], row[3], row[5], row[13], row[14], row[15]) for row in reader]
+        return [Measurement(row[1], row[4], None, None, None, None) for row in reader]
 
 
-    def _generate_voronoi(self):
-        # get all lat/long tuples for every station
-        points = np.zeros((len(self.stations), 2))
-        for i,s in enumerate(self.stations):
-            points[i,:] = list(s.coords.coords)[0]
+    @classmethod
+    def generate_regions(cls, points):
+        """
+           Calculate regions for given points with voronoi. This is useful if
+           you want to see which station is the nearest for a given point.
+        """
+
+        # add big bounding box for germany. with this the resulting cells won't
+        # be affected by infinity points and therefor union of all cells is
+        # equal of intersection country polygon
+        points.extend([[-20,60], [30, 60], [30, 40], [-20, 40]])
+
+        # create matrix for every point
+        matrix = np.zeros((len(points), 2))
+        for i,p in enumerate(points):
+            matrix[i,:] = p
 
         # generate voronoi and get polygons for each region
-        # TODO: calculate as well infinite regions, see
-        # https://stackoverflow.com/questions/20515554/colorize-voronoi-diagram
-        vor = Voronoi(points)
-        polygons = []
-        for region in vor.regions:
-            polygons.append(vor.vertices[region] if -1 not in region else [])
+        vor = Voronoi(matrix)
+        polygons = [vor.vertices[region] for region in vor.regions]
 
-        # load germany border polygon (for intersection test)
+        # load germany border polygon (for intersection test) otherwise the
+        # regions can be outside of germany
         script_path = os.path.dirname(os.path.abspath(__file__))
         path = os.path.join(script_path, 'germany_border.geojson')
         with open(path, "r") as f:
@@ -119,14 +116,15 @@ class Importer:
             polygons_ger = [[p[0], []] for p in coordinates_ger]
             germany = MultiPolygon(polygons_ger)
 
-        # save each voronoi region polygon
-        for i, p in enumerate(vor.point_region):
-            if len(polygons[p]) > 0:
+        # save each voronoi region polygon (discard our bounding box)
+        for idx in vor.point_region[:-4]:
+            if len(polygons) > idx and len(polygons[idx]) > 0:
                 # add first point as last point (needed for postgis)
-                polygon = Polygon(np.append(polygons[p],[polygons[p][0]],axis=0))
+                polygon = Polygon(np.append(polygons[idx],[polygons[idx][0]],axis=0))
 
                 # limit polygons to border of germany
                 polygon_shaped = polygon.intersection(germany)
 
-                # save it
-                self.stations[i].region = polygon_shaped
+                yield polygon_shaped
+            else:
+                print("%d not in polygons" % idx)

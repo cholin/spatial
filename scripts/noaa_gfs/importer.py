@@ -26,7 +26,7 @@ def forecast_download(date_from, date_to, intervals):
         'leftlon' : '5',
         'rightlon' : '16',
         'toplat' : '56',
-        'bottomlat' : '46'
+        'bottomlat' : '47'
     })
 
     delta = date_to - date_from

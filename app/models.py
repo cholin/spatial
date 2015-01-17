@@ -77,8 +77,8 @@ class Forecast(db.Model):
                             ST_ColorMap(
                                 ST_Resample(
                                     rast,
-                                    800,
-                                    800,
+                                    1150,
+                                    950,
                                     NULL,
                                     NULL,
                                     0,
@@ -89,7 +89,7 @@ class Forecast(db.Model):
                                 'pseudocolor'
                             ),
                             (SELECT ST_UNION(region) FROM station),
-                            True
+                            false
                         ),
                         3857
                     )

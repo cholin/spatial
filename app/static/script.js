@@ -73,11 +73,8 @@ $(function() {
   //
   //  Forecasts
   //
-  //  Downloaded subregion 5 (west), 15 (east),
-  //  56 (north), 47 (south) corresponds to
-  //imageBounds = [[47.,5.], [56., 15.]];
+  var imageBounds = [[46.75,4.75], [56.25, 16.25]];
   var imageUrl = 'http://localhost:5000/api/forecasts/temperature'
-  imageBounds = [[47.3895116180001,5.85248986800011], [54.90590037, 14.9501904839839]];
 
   var forecastLayer = L.imageOverlay(imageUrl, imageBounds, {
       'opacity' : 0.5

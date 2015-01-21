@@ -31,7 +31,7 @@ def forecast_download(date_from, date_to, intervals):
 
     delta = date_to - date_from
     for i in range(delta.days + 1):
-        for hour in [0, 6, 12, 18, 24]:
+        for hour in [0, 6, 12, 18]:
             current = date_from + timedelta(days = i, hours = hour)
             for interval in intervals:
                 f_subset = 'dir=%2Fgfs.{date}{hour:02}%2Fmaster&'\
@@ -42,11 +42,16 @@ def forecast_download(date_from, date_to, intervals):
 
                 url = DEFAULT_URI
                 args = '{}&{}'.format(params, subset)
-                try:
-                    response = urllib2.urlopen('{}?{}'.format(url, args))
-                    data = response.read()
-                except urllib2.HTTPError:
-                    data = None
+                data = None
+                # try at least 5 times (and wait 0.5 seconds in between)
+                for i in range(5):
+                    try:
+                        response = urllib2.urlopen('{}?{}'.format(url, args))
+                        data = response.read()
+                        break
+                    except urllib2.HTTPError:
+                        pass
+                    time.sleep(0.5)
 
                 yield current, interval, data
 
@@ -63,6 +68,8 @@ def forecast_noaa_import(date_from, date_to, table, intervals=DEFAULT_INTERVALS)
     # if no date is given, use today
     if date_to is None:
         date_to = datetime.combine(date.today(), datetime.min.time())
+    else:
+        date_to = datetime.strptime(date_to, "%Y-%m-%d")
 
     # loop over downloaded grib files
     for current, interval, data in forecast_download(date_from, date_to, intervals):

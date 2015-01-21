@@ -85,7 +85,7 @@ def import_forecast(date_from, date_to = None):
     imported = []
     errors = []
     table = Forecast.__table__.name
-    intervals = [24]
+    intervals = [24, 48]
     generator = forecast_noaa_import(date_from, date_to, table, intervals)
     for date, interval, sql in generator:
         if sql is not None:

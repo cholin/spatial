@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime
 from sqlalchemy import desc
 from geoalchemy2 import Geometry, Raster, functions as func
@@ -29,17 +30,13 @@ class Measurement(db.Model):
     station_id = db.Column(db.Integer, db.ForeignKey('station.id'))
 
     @classmethod
-    def all(cls, mtype, date = None):
+    def all(cls, mtype, mdate = None):
         qry = db.session.query(cls).filter(cls.type == mtype) \
                     .filter(cls.value != -999) \
+                    .filter(Measurement.date == mdate) \
                     .order_by(desc(cls.date))
 
-        if date is None:
-            date_cmp = qry.first().date
-        else:
-            date_cmp = datetime.strptime(date, "%Y-%m-%d")
-
-        return date_cmp, qry.filter(Measurement.date == date_cmp).all()
+        return qry.all()
 
     def to_geojson(self):
         return {
@@ -66,8 +63,34 @@ class Forecast(db.Model):
         'rainfall' : 1
     }
 
+    def to_dict(self):
+        return {
+            'rid' : self.rid,
+            'date' : self.date,
+            'interval' : int(self.interval.total_seconds() // 3600)
+        }
+
     @classmethod
-    def get_raster_img(cls, ftype, date):
+    def get_forecasts_for_date(cls, ftype, date):
+        qry = cls.query.filter((cls.date + cls.interval) == date)
+        print(qry)
+        results = qry.all()
+        return results
+
+    @classmethod
+    def get_meta(cls, ftype, date, interval):
+        qry = "SELECT Box3d(rast) FROM forecast WHERE date + interval = '%s'" % date
+        result = db.engine.execute(qry).first()
+        pattern = r'BOX3D\(([\d\s.]*),([\d\s.]*)\)'
+        points = re.search(pattern, result[0])
+        top_left_x,top_left_y,_ = points.group(1).split(' ')
+        bottom_right_x,bottom_right_y,_ = points.group(2).split(' ')
+
+        return [(top_left_x, top_left_y), (bottom_right_x, bottom_right_y)]
+
+
+    @classmethod
+    def get_raster_img_for_rid(cls, ftype, rid):
         # TODO: sanitize user input!!
         result = db.engine.execute("""
             SELECT
@@ -97,8 +120,8 @@ class Forecast(db.Model):
             FROM
                 forecast
             WHERE
-                date + interval = '%s'
+                rid = '%s'
             LIMIT 1
-        """ % date);
+        """ % rid);
 
         return result.first()['img']

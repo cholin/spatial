@@ -1,18 +1,3 @@
-function onEachFeature(feature, layer) {
-    if (feature.properties && feature.properties.name) {
-      layer.bindPopup(
-            "<h3>" + feature.properties.name + "</h3>"
-          + "<dl>"
-          + "  <dt>"+feature.properties.type+"</dt>"
-          + "  <dd>"+feature.properties.value+"</dd>"
-          + "  <dt>Altitude</dt>"
-          + "  <dd>"+feature.properties.altitude+"</dd>"
-          + "</dl>"
-      );
-    }
-}
-
-
 function setStyle(feature) {
   var hue = 30 + 240 * (50 - 2*feature.properties.value) / 60;
   return {
@@ -22,25 +7,12 @@ function setStyle(feature) {
   };
 }
 
-
-function getDate() {
-  var max = parseInt($('.slider input').attr('max'));
-  var val = parseInt($('.slider input').val());
-  var offset = (max-val)*1000*60*60*24;
-  var date = new Date(new Date().getTime() - offset);
-
-  return date.getFullYear() + '-' +
-         (parseInt(date.getMonth())+1) + '-' +
-         date.getDate();
-}
-
-
 $(function() {
   // create leaflet map with grey tiles
   var map = L.map('map').setView([51.8, 10], 6);
   L.tileLayer('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
-          maxZoom: 18,
-          id: 'examples.map-20v6611k'
+      maxZoom: 18,
+      id: 'examples.map-20v6611k'
   }).addTo(map);
 
   //
@@ -50,87 +22,177 @@ $(function() {
     onEachFeature: onEachFeature,
     style: setStyle,
     middleware: function(data) {
-      // set date in slider info section
-      var elem = $('.slider p');
-      if (elem.length != 0) {
-        elem.html(data.date);
-      } else {
-        $('.slider').append("<p>"+data.date+"</p>");
-      }
-
-      // if there is no data, add text to slider info section
-      if (data.measurements.length == 0) {
-        var span = "<span style=\"display:block;color:red\"> no data</span>";
-        $('.slider p').append(span);
-      }
-
       // return geojson data
       return data.measurements;
     }
   }).addTo(map);
+
+  function highlightFeature(feature, layer) {
+
+          if (feature.properties && feature.properties.name) {
+            layer.bindPopup(
+                  "<h3>" + feature.properties.name + "</h3>"
+                + "<dl>"
+                + "  <dt>"+feature.properties.type+"</dt>"
+                + "  <dd>"+feature.properties.value+"</dd>"
+                + "  <dt>Altitude</dt>"
+                + "  <dd>"+feature.properties.altitude+"</dd>"
+                + "</dl>"
+            );
+          }
+
+    layer.setStyle({
+        weight: 5,
+        color: '#666',
+        dashArray: '',
+    });
+  }
+
+function resetHighlight(e) {
+    geojsonLayer.resetStyle(e.target);
+}
+
+function onEachFeature(feature, layer) {
+    layer.on({
+        mouseover: function(e) {
+          if (feature.properties && feature.properties.name) {
+            e.target.bindPopup(
+                  "<h3>" + feature.properties.name + "</h3>"
+                + "<dl>"
+                + "  <dt>"+feature.properties.type+"</dt>"
+                + "  <dd>"+feature.properties.value+"</dd>"
+                + "  <dt>Altitude</dt>"
+                + "  <dd>"+feature.properties.altitude+"</dd>"
+                + "</dl>"
+            );
+          e.target.setStyle({
+              weight: 5,
+              color: '#666',
+              dashArray: '',
+          });
+          }
+
+        },
+        mouseout: resetHighlight
+    });
+}
+
+  //
+  // DatePicker
+  //
+
+  L.Control.DateTimePicker = L.Control.extend(
+  {
+    options: { position: 'bottomleft' },
+    onAdd: function (map) {
+      var controlDiv = L.DomUtil.create('div', 'info');
+      var controlUI = L.DomUtil.create('input', '', controlDiv);
+      controlUI.type = 'text';
+      controlUI.id = 'dateTimePicker';
+      controlUI.placeholder = 'Pick your date';
+
+      return controlDiv;
+    }
+  });
+
+  var dateTimePickerControl = new L.Control.DateTimePicker();
+  map.addControl(dateTimePickerControl);
+  $('#dateTimePicker').datetimepicker({
+    format: "d.m.Y H:i",
+    allowTimes: [
+      '00:00', '06:00', '12:00', '18:00'
+    ],
+    defaultTime : '00:00',
+    closeOnDateSelect : true,
+    onChangeDateTime:function(dp,input){
+      var date = new Date(dp).dateFormat('Y-m-d/H');
+      $.get("api/forecasts/temperate/"+date, function( data ) {
+          info.update(new Date(dp), data);
+
+          var elem = $('#measurement');
+          elem.prop('checked', true);
+          elem.change();
+      });
+
+    }
+  });
+
+  var info = L.control();
+  info.onAdd = function (map) {
+      this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+      var p = L.DomUtil.create('p', '', this._div);
+      p.innerHTML = 'No data selected';
+
+      return this._div;
+  };
+
+  // method that we will use to update the control based on feature properties passed
+  info.update = function (date, data) {
+    var dateFormatted = date.dateFormat('Y-m-d/H');
+    var html = ['<h4 id="date" data="'+dateFormatted+'">'+date.dateFormat('d.m.Y H:i')+'</h4>'];
+
+    html.push('<label>');
+    html.push('<input id="measurement" type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers" />');
+    html.push('<span>Messung</span>');
+    html.push('</label>');
+
+    if (data && 'forecasts' in data && data.forecasts.length > 0) {
+      html.push('<h5>Forecasts</h5>');
+      for (var i=0; i < data.forecasts.length; ++i) {
+        var elem = data.forecasts[i];
+        var date = new Date(elem.date).dateFormat('d.m.Y H:i');
+        html.push('<label class="forecast-entry">');
+        html.push('<input type="radio" value="'+elem.rid+'" class="forecast-selector leaflet-control-layers-selector" name="leaflet-base-layers" />');
+        html.push('<span>'+date+' ('+elem.interval+'h ago)</span>');
+        html.push('</label>');
+      }
+    } else {
+      html.push("<p>No forecasts available</p>");
+    }
+
+    this._div.innerHTML = html.join("");
+
+    $('input[type=radio]').on('change', reloadLayers);
+  };
 
 
   //
   //  Forecasts
   //
   var imageBounds = [[46.75,4.75], [56.25, 16.25]];
-  var imageUrl = 'http://localhost:5000/api/forecasts/temperature'
-
-  var forecastLayer = L.imageOverlay(imageUrl, imageBounds, {
+  var forecastLayer = L.imageOverlay("", imageBounds, {
       'opacity' : 0.5
-  });
+  }).addTo(map);
 
-  //
-  // slider control
-  //
-  L.Control.Slider = L.Control.extend(
-  {
-    options: { position: 'bottomleft' },
-    onAdd: function (map) {
-      var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar slider');
-      L.DomEvent
-        // add functionality to reload data
-        .addListener(controlDiv, 'change', function() {
-          geojsonLayer.refresh("api/measurements/temperature/"+getDate());
-          forecastLayer.setUrl("api/forecasts/temperate/"+getDate());
-        })
+  info.addTo(map);
 
-        .addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
-        .addListener(controlDiv, 'click', L.DomEvent.preventDefault)
+function reloadLayers(elem) {
+    var elem = $(this);
+    if (elem.attr('class').indexOf('forecast-selector') >= 0) {
+      map.removeLayer(geojsonLayer);
+      map.addLayer(forecastLayer);
 
-        // disable dragging for map otherwise slider is not useable
-        .addListener(controlDiv, 'mouseover', function() {
-            map.dragging.disable()
-          })
+      var rid = elem.val();
+      var url = "api/forecasts/raster/temperature/"+rid;
+      if (forecastLayer._url !== url) {
+        map.spin(true);
+        forecastLayer.setUrl("api/forecasts/raster/temperature/"+rid);
+        forecastLayer.on('load', function() {
+            map.spin(false);
+            map.addLayer(forecastLayer);
+        });
+      } else {
+        map.addLayer(forecastLayer);
+      }
+    } else {
+      map.removeLayer(forecastLayer);
+      map.addLayer(geojsonLayer);
 
-        // enable dragging for map again
-        .addListener(controlDiv, 'mouseout', function() {
-          map.dragging.enable();
-          })
-
-      var controlUI = L.DomUtil.create('input', 'leaflet-draw-edit-remove full-width', controlDiv);
-      controlUI.type = 'range';
-      controlUI.min = '0';
-      controlUI.max = '100';
-      controlUI.value = '100';
-      controlUI.step = '1';
-
-      return controlDiv;
+      var date = $('h4').attr('data');
+      geojsonLayer.refresh("api/measurements/temperature/"+date);
     }
-  });
+}
 
-  //
-  // GroupedLayers
-  //
-  var sliderControl = new L.Control.Slider();
-  map.addControl(sliderControl);
 
-  var baseLayers = {
-    "Messung": geojsonLayer,
-    "Vorhersage": forecastLayer
-  };
 
-  var options = {'collapsed' : false};
-  var layerControl = L.control.groupedLayers(baseLayers, {}, options);
-  map.addControl(layerControl);
 });

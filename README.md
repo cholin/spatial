@@ -22,7 +22,8 @@ $ createdb -O foo232 foo23
 ```
 
 Download the source, create a new virtualenv and install dependencies like
-frameworks and libaries (you always need to activate your environment):
+frameworks and libaries (you always need to activate your environment). It's
+better if you install numpy via your distribution package manager:
 
 ```
 $ git clone git@github.com:cholin/spatial.git
@@ -43,7 +44,9 @@ Create database and import data from DWD (see [README](https://github.com/cholin
 
 ```
 $ python2 manage.py resetdb
-$ python2 manage.py import_weather
+$ python2 manage.py import_weather                # imports all recent dwd data
+$ python2 manage.py import_forecast 2015-01-01    # import forecasts from
+                                                  # 01.01.2015 until now
 ```
 
 Start webserver
@@ -52,5 +55,3 @@ Start webserver
 $ python2 manage.py runserver
 $ firefox http://localhost:5000
 ```
-
-

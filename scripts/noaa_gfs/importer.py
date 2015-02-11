@@ -7,7 +7,9 @@ from datetime import datetime, date, timedelta
 from urllib import urlencode
 from app.exts import db
 
-DEFAULT_URI='http://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_hd.pl'
+DEFAULT_URI="http://nomads.ncep.noaa.gov/cgi-bin/filter_gensbc.pl"
+# filter_gfs_hd seams to be no more
+# DEFAULT_URI='http://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_hd.pl' 
 DEFAULT_INTERVALS = [12, 24, 36, 48, 96]
 
 def forecast_download(date_from, date_to, intervals):
@@ -19,23 +21,23 @@ def forecast_download(date_from, date_to, intervals):
 
     # get forecasts for temperature and rainfall for bounding box of germany
     params = urlencode({
-        'lev_2_m_above_ground' : 'on',
-        'var_PWAT' : 'on',
-        'var_TMP' : 'on',
-        'subregion' : '',
-        'leftlon' : '5',
-        'rightlon' : '16',
-        'toplat' : '56',
-        'bottomlat' : '47'
+        'lev_2_m_above_ground': 'on',
+        'var_PRES': 'on', # gensbc has no PWAT
+        'var_TMP': 'on',
+        'subregion': '',
+        'leftlon': '5.916667',
+        'rightlon': '14.975',
+        'toplat': '55.052222',
+        'bottomlat': '47.270108'
     })
 
     delta = date_to - date_from
     for i in range(delta.days + 1):
         for hour in [0, 6, 12, 18]:
-            current = date_from + timedelta(days = i, hours = hour)
+            current = date_from + timedelta(days=i, hours=hour)
             for interval in intervals:
-                f_subset = 'dir=%2Fgfs.{date}{hour:02}%2Fmaster&'\
-                           'file=gfs.t{hour:02}z.mastergrb2f{interval:02}'
+                f_subset = 'dir=%2Fgefs.{date}%2F{hour:02}%2Fpgrb2a_bc'\
+                           '&file=ge10pt.t{hour:02}z.pgrb2a_bcf{interval:02}'
                 subset = f_subset.format(date=current.strftime("%Y%m%d"),
                                          hour=hour,
                                          interval=interval)

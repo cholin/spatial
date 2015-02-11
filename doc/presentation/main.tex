@@ -198,7 +198,37 @@
   \end{figure}
 \end{frame}
 
-\section{Implemenation}
+\section{Implementation}
+\subsection{Schema}
+\begin{frame}{Implementation - Schema}
+  \begin{block}{Measurement}
+    \begin{itemize}
+      \item station models weather station
+      \item a station measures arbitrary data (measurements)
+    \end{itemize}
+  \end{block}
+
+  \begin{figure}
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/schema_station_measurement.png}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Implementation - Schema}
+  \begin{block}{Forecast}
+    \begin{description}
+      \item [date] computation date
+      \item [interval] time interval in future
+      \item [rast] forecast data in raster format (on several bands)
+    \end{description}
+  \end{block}
+
+  \begin{figure}
+    \centering
+    \includegraphics[width=0.2\textwidth]{images/schema_forecast.png}
+  \end{figure}
+\end{frame}
+
 \subsection{Server}
 \begin{frame}{Implementation - Server}
   \begin{block}{Overview}
@@ -220,7 +250,7 @@
 \end{frame}
 
 \subsection{Client}
-\begin{frame}{Imiplementation - Client}
+\begin{frame}{Implementation - Client}
   \begin{block}{Overview}
     \begin{description}
       \item [language] javascript

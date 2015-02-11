@@ -5,3 +5,10 @@ env
 *.swp
 doc/tables
 config.cfg
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb

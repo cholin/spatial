@@ -95,7 +95,8 @@ class Importer:
         # add big bounding box for germany. with this the resulting cells won't
         # be affected by infinity points and therefor union of all cells is
         # equal of intersection country polygon
-        points.extend([[-20,60], [30, 60], [30, 40], [-20, 40]])
+        box = [[-20,60], [30, 60], [30, 40], [-20, 40]]
+        points.extend(box)
 
         # create matrix for every point
         matrix = np.zeros((len(points), 2))
@@ -104,7 +105,7 @@ class Importer:
 
         # generate voronoi and get polygons for each region
         vor = Voronoi(matrix)
-        polygons = [vor.vertices[region] for region in vor.regions]
+        polygons = [vor.vertices[r] for r in vor.regions]
 
         # load germany border polygon (for intersection test) otherwise the
         # regions can be outside of germany
@@ -117,14 +118,15 @@ class Importer:
             germany = MultiPolygon(polygons_ger)
 
         # save each voronoi region polygon (discard our bounding box)
-        for idx in vor.point_region[:-4]:
-            if len(polygons) > idx and len(polygons[idx]) > 0:
-                # add first point as last point (needed for postgis)
-                polygon = Polygon(np.append(polygons[idx],[polygons[idx][0]],axis=0))
+        for point_idx,region_idx in enumerate(vor.point_region[:-len(box)]):
+            polygon = None
+            if len(polygons) > region_idx:
+                p_tmp = polygons[region_idx]
+                if len(p_tmp) > 0:
+                    # add first point as last point (needed for postgis)
+                    p = Polygon(np.append(p_tmp,[p_tmp[0]],axis=0))
 
-                # limit polygons to border of germany
-                polygon_shaped = polygon.intersection(germany)
+                    # limit polygons to border of germany
+                    polygon = p.intersection(germany)
 
-                yield polygon_shaped
-            else:
-                print("%d not in polygons" % idx)
+            yield (point_idx, polygon)

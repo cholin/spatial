@@ -21,15 +21,15 @@ def forecast_download(date_from, date_to, intervals):
 
     # get forecasts for temperature and rainfall for bounding box of germany
     params = urlencode({
-        'lev_30-0_mb_above_ground': 'on', # layer for TMP
-        'lev_entire_atmosphere_\(considered_as_a_single_layer\)': 'on', # layer for PWAT
+        'lev_30-0_mb_above_ground': 'on', # need that layer for TMP
+        'lev_entire_atmosphere_\(considered_as_a_single_layer\)': 'on', # need that layer for PWAT
         'var_PWAT': 'on',
         'var_TMP': 'on',
         'subregion': '',
-        'leftlon': '5.916667',
-        'rightlon': '14.975',
-        'toplat': '55.052222',
-        'bottomlat': '47.270108'
+        'leftlon': '5',
+        'rightlon': '16',
+        'toplat': '56',
+        'bottomlat': '47'
     })
 
     delta = date_to - date_from

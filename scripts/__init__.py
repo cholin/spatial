@@ -61,9 +61,10 @@ def import_weather(host = DEFAULT_HOST, path = DEFAULT_PATH, limit = None):
     # Calculate regions for stations (voronoi)
     stations = Station.query.all()
     points = [to_shape(s.geom) for s in stations]
-    for i,region in enumerate(Importer.generate_regions(points)):
-        stations[i].region = from_shape(region, srid=4326)
-        db.session.add(stations[i])
+    for i,region in Importer.generate_regions(points):
+        if region is not None:
+            stations[i].region = from_shape(region, srid=4326)
+            db.session.add(stations[i])
 
     db.session.commit()
 

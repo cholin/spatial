@@ -18,12 +18,23 @@ $(function() {
   //
   // geojson layer (leaflet-ajax plugin)
   //
+  var geojsonMarkerOptions = {
+    radius: 4,
+    fillColor: "#ff7800",
+    color: "#000",
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0.8
+  };
   var geojsonLayer = new L.GeoJSON.AJAX("api/measurements/temperature",{
     onEachFeature: onEachFeature,
     style: setStyle,
     middleware: function(data) {
       // return geojson data
       return data.measurements;
+    },
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, geojsonMarkerOptions);
     }
   }).addTo(map);
 
@@ -159,7 +170,7 @@ function onEachFeature(feature, layer) {
   //
   //  Forecasts
   //
-  var imageBounds = [[46.75,4.75], [56.25, 16.25]];
+  var imageBounds = [[46.5,4.5], [56.5, 16.5]];
   var forecastLayer = L.imageOverlay("", imageBounds, {
       'opacity' : 0.5
   }).addTo(map);

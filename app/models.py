@@ -16,11 +16,9 @@ class Station(db.Model):
     def __repr__(self):
         return '<Station %r>' % self.name
 
-    def region_as_geojson(self):
-        region = None
-        if self.region is not None:
-            region =  json.loads(db.session.scalar(func.ST_AsGeoJSON(self.region)))
-        return region
+    def as_geojson(self):
+        regions = db.session.scalar(func.ST_AsGeoJSON(self.region)) or '{}'
+        return json.loads(regions)
 
 class Measurement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -47,7 +45,7 @@ class Measurement(db.Model):
                 "type": self.type,
                 "value": self.value
             },
-            "geometry" : self.station.region_as_geojson()
+            "geometry" : self.station.as_geojson()
         }
 
 
@@ -73,7 +71,6 @@ class Forecast(db.Model):
     @classmethod
     def get_forecasts_for_date(cls, ftype, date):
         qry = cls.query.filter((cls.date + cls.interval) == date)
-        print(qry)
         results = qry.all()
         return results
 

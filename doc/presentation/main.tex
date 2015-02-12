@@ -32,7 +32,7 @@
 % image to be shown on the title page (without file extension, should be pdf or png)
 \titleimage{fu_500}
 
-\title[Short Paper Title] % (optional, use only with long paper titles)
+\title[Spatial DB Project] % (optional, use only with long paper titles)
 {Weather forecast visualization}
 
 \subtitle
@@ -46,7 +46,7 @@
 {Freie Universität Berlin}
 % - Keep it simple, no one is interested in your street address.
 
-\date[CFP 2003] % (optional, should be abbreviation of conference name)
+\date[2015] % (optional, should be abbreviation of conference name)
 {February 2015}
 % - Either use conference name or its abbreviation.
 % - Not really informative to the audience, more for people (including
@@ -90,11 +90,16 @@
 \begin{frame}{Topic}
   \begin{block}{Subject}
     Implement a client and server for weather measurements and forecasts
+    \begin{itemize}
+	    \item collect forecast and historical weather data
+	    \item overlay weather data with OSM
+	    \item visualize probability of forecast and historical data
+	\end{itemize}
   \end{block}
 
   \begin{block}{Motivation}
     \begin{itemize}
-      \item get in touch with spatial databases like postgres/postgis
+      \item practical experience with spatial databases like postgres/postgis
       \item model data in raster and vector representation
       \item visualize spatial data on a dynamic map
     \end{itemize}
@@ -288,6 +293,44 @@
     \caption{forecast for 2015-02-09 00:00 for germany 24h before}
     \label{fig:voronoi}
   \end{figure}
+\end{frame}
+
+\section{Issues}
+\begin{frame}{Issues}
+	\begin{block}{Problems encountered}
+		\begin{itemize}
+			\item comparing historical and forecast data:
+				\begin{itemize}
+					\item No suitable way to overlay both datasets on a map
+					\item When is a forecast considered accurate?
+				\end{itemize}
+			\item collecting forecast data
+				\begin{itemize}
+					\item few open sources for forecast data
+					\item NOAA grib filter very bad documented 
+				\end{itemize}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\section{Outlook and summary}
+\begin{frame}{Outlook}
+		\begin{block}{Possible extensions}
+			\begin{description}
+				\item [calculations] creation of own forecast system
+				\item [datasets] include and integrate more forecast sources
+				\item [visualisation] further features of a weather client
+			\end{description}
+		\end{block}
+\end{frame}
+
+\begin{frame}{Summary}
+	\begin{block}{lessons from a mini project}
+			\begin{itemize}
+				\item learned to account for vector and raster data in postgis
+				\item learned latest visualisations frameworks in python
+			\end{itemize}
+	\end{block}
 \end{frame}
 
 \begin{frame}{End}

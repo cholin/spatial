@@ -7,7 +7,9 @@ from datetime import datetime, date, timedelta
 from urllib import urlencode
 from app.exts import db
 
-DEFAULT_URI='http://nomads.ncep.noaa.gov/cgi-bin/filter_gens.pl'
+# use NOAA "gens" filter:
+# Global Ensemble Forecast System (GEFS) addressing uncertainity:
+DEFAULT_URI = 'http://nomads.ncep.noaa.gov/cgi-bin/filter_gens.pl'
 DEFAULT_INTERVALS = [12, 24, 36, 48, 96]
 
 def forecast_download(date_from, date_to, intervals):
@@ -19,20 +21,21 @@ def forecast_download(date_from, date_to, intervals):
 
     # get forecasts for temperature and rainfall for bounding box of germany
     params = urlencode({
-        'lev_2_m_above_ground' : 'on',
-        'var_PWAT' : 'on',
-        'var_TMP' : 'on',
-        'subregion' : '',
-        'leftlon' : '5',
-        'rightlon' : '16',
-        'toplat' : '56',
-        'bottomlat' : '47'
+        'lev_30-0_mb_above_ground': 'on', # need that layer for TMP
+        'lev_entire_atmosphere_\(considered_as_a_single_layer\)': 'on', # need that layer for PWAT
+        'var_PWAT': 'on',
+        'var_TMP': 'on',
+        'subregion': '',
+        'leftlon': '5',
+        'rightlon': '16',
+        'toplat': '56',
+        'bottomlat': '47'
     })
 
     delta = date_to - date_from
     for i in range(delta.days + 1):
         for hour in [0, 6, 12, 18]:
-            current = date_from + timedelta(days = i, hours = hour)
+            current = date_from + timedelta(days=i, hours=hour)
             for interval in intervals:
                 f_subset = 'dir=%2Fgefs.{date}%2F{hour:02}%2Fpgrb2&'\
                            'file=gec00.t{hour:02}z.pgrb2f{interval:02}'

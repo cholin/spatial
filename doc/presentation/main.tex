@@ -90,6 +90,11 @@
 \begin{frame}{Topic}
   \begin{block}{Subject}
     Implement a client and server for weather measurements and forecasts
+    \begin{itemize}
+	    \item collect forecast and historical weather data
+	    \item overlay weather data with OSM
+	    \item visualize probability of forecast and historical data
+	\end{itemize}
   \end{block}
 
   \begin{block}{Motivation}
@@ -288,6 +293,24 @@
     \caption{forecast for 2015-02-09 00:00 for germany 24h before}
     \label{fig:voronoi}
   \end{figure}
+\end{frame}
+
+\section{Issues}
+\begin{frame}{Issues}
+	\begin{block}{Problems encountered}
+		\begin{itemize}
+			\item comparing historical and forecast data:
+				\begin{itemize}
+					\item No suitable way to overlay both datasets on a map
+					\item When is a forecast considered accurate?
+				\end{itemize}
+			\item collecting forecast data
+				\begin{itemize}
+					\item few open sources for forecast data
+					\item NOAA grib filter very bad documented 
+				\end{itemize}
+		\end{itemize}
+	\end{block}
 \end{frame}
 
 \section{Outlook and summary}

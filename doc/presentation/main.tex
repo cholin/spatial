@@ -39,7 +39,7 @@
 {Spatial DB project}
 
 \author[Author, Another] % (optional, use only with lots of authors)
-{Adam Furmańczuk \and Nico von Geyso}
+{Adam Furmańczuk \& Nico von Geyso}
 % - Give the names in the same order as the appear in the paper.
 
 \institute[FU Berlin] % (optional, but mostly needed)
@@ -89,11 +89,11 @@
 
 \begin{frame}{Topic}
   \begin{block}{Subject}
-    Implement a client and server for weather measurements and forecasts
+    Visualize historical and current weather measurements and forecasts
     \begin{itemize}
 	    \item collect forecast and historical weather data
 	    \item overlay weather data with OSM
-	    \item visualize probability of forecast and historical data
+	    %\item visualize probability of forecast and historical data
 	\end{itemize}
   \end{block}
 
@@ -128,6 +128,7 @@
           \vspace{0.1cm}
           \textbf{Problem:} station measures for a point (not region)
         \item use irregular tesselation (voronoi) to calculate region
+        \item limit cells to germany by intersecting with polygon
     \end{itemize}
   \end{block}
 \end{frame}
@@ -168,6 +169,7 @@
     \begin{itemize}
       \item global weather forecast model
       \item data public available for current and past forecasts
+      \item access data via ftp server or by perl webserver script
       \item data format grib2 (raster)
       \end{itemize}
   \end{block}
@@ -178,7 +180,7 @@
   \begin{figure}
     \centering
     \includegraphics[width=0.8\textwidth]{images/raster.png}
-    \caption{24h forecast for \textit{germany} 2015-02-05 18:00}
+    \caption{24h forecast for \textit{germany} 2015-02-05 18:00 (12x10)}
     \label{fig:voronoi}
   \end{figure}
 \end{frame}
@@ -304,7 +306,7 @@
 					\item nearly no or bad documentation
 					\item inconsistent or missing data
 				\end{itemize}
-			\item time consuming
+			\item time consuming task
 				\begin{itemize}
 					\item find data sources and import the data at all
 					\item raster data visualization

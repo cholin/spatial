@@ -1,0 +1,110 @@
+\documentclass[english]{lni}
+\let\ifpdf\relax
+\IfFileExists{latin1.sty}{\usepackage{latin1}}{\usepackage{isolatin1}}
+
+\usepackage{ifpdf}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\author{
+	{Adam Furmańczuk, Nico von Geyso} \\
+	\\
+	Databases and Information Systems\\
+	Department of Computer Sciences\\
+	Freie Universitaet Berlin\\
+	Takustrasse \\
+	14195 Berlin  \\
+	adam.furmanczuk@fu-berlin.de \\
+	nico.geyso@FU-Berlin.de
+}
+\title{Spatial Database Project}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+In this spaital databae project historical and forecast data is collected and overlayed on a map. 
+\end{abstract}
+
+\section{Introduction}
+The task in spatial database project is to visualize historical and current weather measurements and forecasts.
+Part of the assignment is to collect forecast and historical weather data and overlay that data with OSM or another map provider.
+
+\section{Data Sources}
+
+\subsection{Historical Data}
+Main datasource for historical data is {\textit{Deutsche Wetterdienst}}. Data for temperature, air pressure and rainfall is collected from 503 weather stations in Germany. The data is available through public ftp server  \hyperref{ftp://ftp.dwd.de/pub/CDC/observations_germany/}. It contains data for the past (several month up to years) until today.
+
+\subsection{Forecast Data}
+
+Forecast data is provieded by National Oceanic and Atmospheric Administration (NOAA) Global Forecast System,
+It provides a global weather forecast model. Data is freely available for current and past forecasts.
+The data can be accessed via ftp server or by perl webserver script. Output format is grib2 (raster).
+
+\section{Implementation}
+
+\subsection{Implementation overview}
+The implementation is based on python and postgres database with postgis extension. Client communication is done over REST api.
+The python libraries include:
+\begin{itemize}
+		\item flask web framework
+		\item geoalchemy
+		\item numpy
+		\item shapely
+\end{itemize}
+
+\subsection{Installation}
+
+The source code along with the installation instruction is available on github \url{https://github.com/cholin/fuberlin_spatial_db_project/}.
+
+Basically, in order to run the project on the local (linux) machine the following steps need to be taken:
+
+\begin{itemize}
+\item make sure python2.7, pip,  postgres9.x, postgis2.x are installed
+\item setup database for postgres:
+\begin{itemize}
+\item sudo su postgres
+\item createuser -D -P -s -R <username>
+\item createdb -O <username> <database>
+\end{itemize}
+\item git clone git@github.com:cholin/spatial.git
+\item cd spatial
+\item pip install -r requirements.txt
+\item cat config.cfg.dist > config.cfg
+\item vi config.cfg \# enter user credentials and database name
+\item python2 manage.py resetdb \# delete and setup database with postgis extension
+\item python2 manage.py import\_weather  \# import historical weather from DWD
+\item python2 manage.py import\_forecast YYYY-mm-dd \# import forecast since given date  
+\item python2 manage.py runserver
+\end{itemize}
+
+The spatial database project is now available on \url{http://localhost:5000}.
+
+\section{Issues}
+\subsection{Weather data provided as points}
+Weather data from DWD is provided as a collection of geographic points. In order to produce a nice overlay map, those points need to be transformed to adjacent polygons. We use a Vernoi Alogirthm, to transform the points into cells.
+
+\subsection{Importing weather data}
+For the datasources nearly no or bad documentation is available. This problem is most severe on the NOAA plattform. where variables are not documented and one need to try-and-error on which raster-band are the correct values.
+
+Another problem was that some data is inconsistent or missing. We chose to leave are blank, where no data is available.
+
+As only few weather data sources are freely accessible. It is an time consuming issue to find and import the data at all.
+Another point is, that raster data from NOAA is provided with a 0.5 degree resolution. We use a filter technique for a nicer visualization.
+
+\subsection{Learning the libraries}
+
+The last issue encountered was get familiar with libraries.
+
+\section{Outlook}
+
+This project can be further extended for calculations, datasets and visualisation.
+As for calculations, based on the available data a new forecast system can be introduced. 
+Furhter development effort can be put to include more datasets. Currently, we use only DWD and NOAA data sources. include and integrate more forecast sources.
+Finally, more work can be put into visualization, in order to improve usability. 
+
+\section{Summary}
+In this project we learned to account for vector and raster data in postgis. We also learned how to visualize spatial data using front-end library leaflet in connection with the database extension postgis.
+
+\bibliography{lnitemplate}
+
+\end{document}

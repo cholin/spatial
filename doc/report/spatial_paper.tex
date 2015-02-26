@@ -19,17 +19,15 @@
 \maketitle
 
 \begin{abstract}
-  Topic was to collect historical and forecast weather data. This data then
-  should be overlayed on a map. This reports gives you a short introduction
-  about the datasets and the implementation. As well there is a step by step
-  manual to setup the software locally.
+  The topic deals with collection of historical and forecast weather data,
+  that should be overlayed on a map. This reports gives you a introduction
+  about the datasets and the implementation. A step by step manual guides
+  to setup the software locally. You are welcome to extended this project.
 \end{abstract}
 
 
 \section{Introduction}
-The task is to visualize historical and current weather measurements and
-forecasts. Part of the assignment is to collect the data itself and overlay that
-data with OSM or another map provider.
+The spatial database task is to visualize historical and current weather measurements and forecasts. Part of the assignment is to collect the data itself and overlay that data with Open Street Maps (OSM) or another map provider.
 
 
 \section{Data Sources}
@@ -100,7 +98,7 @@ createdb -O <username> <database>
 \end{verbatim}
 
 \paragraph{Setup}
-Source download and dependency installation.
+Before running the install steps, you need python2.7, pip  and virtualenv to be installed. Once satisfied, proceed with source download and dependency installation:
 \begin{verbatim}
 $ git clone git@github.com:cholin/fuberlin_spatial_db_project.git
 $ cd spatial
@@ -155,14 +153,14 @@ The spatial database project is now available on \url{http://localhost:5000}.
 
 \section{Issues}
 \subsection{Importing weather data}
-For \textit{DWD} and \textit{NOAA GFS} there are no existing importers. Therefor
+For \textit{DWD} and \textit{NOAA GFS} there are no existing importers. Therefore,
 new importers had to be implemented. Furthermore raw weather measurements or
 forecast data is not useful at all. This data needs to be transformed and
 integrated into the application itself.
 
 \subsection{Documentation}
 For data sources nearly no or bad documentation is available. This problem
-is most severe on the \textit{NOAA} plattform where variables are not
+is most severe on the \textit{NOAA} platform where variables are not
 documented and often results in \textit{try-and-error} methods.
 
 \subsection{Inconsistency}
@@ -178,14 +176,16 @@ another one.
 \section{Outlook}
 This project can be further extended for calculations, datasets and
 visualisation.
+\paragraph{Calculations}
+Based on the available forecast and historical data a new forecast system can be
+introduced. A lot of variables have influence on the accuracy of a forecast. In order to process vast amount of data efficiently new (distributed) algorithms are welcome.
+\paragraph{Datasets} As creating new calculations for dataset creation is no easy task, further development effort can be put to include more datasets. Currently, we use only \textit{DWD} and \textit{NOAA} data sources. One interesting project that performs own calculations based on NOAA and European Centre for Medium-Range Weather Forecasts is 
+\begin{center}
+	\url{http://openweathermap.org/}
+\end{center}.
 
-As for calculations, based on the available data a new forecast system can bei
-introduced. 
-Futher development effort can be put to include more datasets. Currently, we
-use only \textit{DWD} and \textit{NOAA} data sources. include and integrate
-more forecast sources. Finally, more work can be put into visualization, in
-order to improve usability. 
-
+\paragraph{Visualisation} Finally, more work can be put into visualization, in
+order to improve usability. Checking current weather and forecast is an everyday task not only for computer scientist. A convenient user interface should include search box for places. Another important feature is display of short and medium range forecast at a glance. Diagrams and charts with different sensor data further improve convenience.
 
 \section{Summary}
 In this project we learned to account for vector and raster data in spatial
